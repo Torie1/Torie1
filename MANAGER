@@ -1,0 +1,171 @@
+package com.hotel;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.hotel.exception.DuplicateObjectException;
+import com.hotel.exception.IllegalLoadException;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Manager {
+    private final String DATA_DIRECTORY;
+
+    private List<Account> accounts;
+
+    public Manager(String dataDirectory) {
+        this.DATA_DIRECTORY = dataDirectory;
+        accounts = new ArrayList<>();
+        loadData();
+    }
+
+    private void loadData() {
+        try {
+            Path dataDirectoryPath = Paths.get(DATA_DIRECTORY);
+            if (!Files.exists(dataDirectoryPath)) {
+                Files.createDirectories(dataDirectoryPath);
+            }
+
+            DirectoryStream<Path> accountDirectories = Files.newDirectoryStream(dataDirectoryPath);
+
+            for (Path accountDirectory : accountDirectories) {
+                Path accountFilePath = accountDirectory.resolve("account.json");
+                if (!Files.exists(accountFilePath)) {
+                    System.out.println("Account file does not exist: " + accountFilePath);
+                    continue;
+                }
+                Account account = null;
+                try {
+                    account = JsonUtil.fromJson(accountFilePath.toFile(), Account.class);
+                } catch (JsonParseException | JsonMappingException e) {
+                    System.out.println("Failed to parse JSON data from file: " + accountFilePath);
+                    e.printStackTrace();
+                    continue;
+                }
+
+                DirectoryStream<Path> reservationFiles = Files.newDirectoryStream(accountDirectory, "res-*.json");
+                for (Path reservationFile : reservationFiles) {
+                    if (!Files.exists(reservationFile)) {
+                        System.out.println("Reservation file does not exist: " + reservationFile);
+                        continue;
+                    }
+                    Reservation reservation = null;
+                    try {
+                        reservation = JsonUtil.fromJson(reservationFile.toFile(), Reservation.class);
+                    } catch (JsonParseException | JsonMappingException e) {
+                        System.out.println("Failed to parse JSON data from file: " + reservationFile);
+                        e.printStackTrace();
+                        continue;
+                    }
+                    account.addReservation(reservation);
+                }
+
+                addAccount(account);
+                saveData(account);
+            }
+        } catch (IOException | DuplicateObjectException e) {
+            throw new IllegalLoadException("Failed to load data");
+        }
+    }
+
+
+
+    // Method to save account and reservation data to JSON files
+    private void saveData(Account account) {
+        try {
+            // Create the account directory if it does not exist
+            String accountDataDirectory = DATA_DIRECTORY + account.getAccountNumber() + "/";
+            Path accountDataPath = Paths.get(accountDataDirectory);
+            if (!Files.exists(accountDataPath)) {
+                Files.createDirectories(accountDataPath);
+            }
+
+            // Save the account data
+            File accountFile = new File(accountDataDirectory + "account.json");
+            JsonUtil.toJson(accountFile, account);
+
+            // Save each reservation data
+            List<Reservation> reservations = account.getReservations();
+            for (Reservation reservation : reservations) {
+                File reservationFile = new File(accountDataDirectory + "res-" + reservation.getReservationNumber() + ".json");
+                JsonUtil.toJson(reservationFile, reservation);
+            }
+        } catch (IOException e) {
+            // Handle the exception (e.g., log or throw a custom exception)
+            e.printStackTrace();
+        }
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void addAccount(Account account) throws DuplicateObjectException {
+        for (Account existingAccount : accounts) {
+            if (existingAccount.getAccountNumber().equals(account.getAccountNumber())) {
+                throw new DuplicateObjectException("Account with number " + account.getAccountNumber() + " already exists.");
+            }
+        }
+        accounts.add(account);
+        saveData(account);
+    }
+
+    public void updateAccountData(Account account) {
+        // Your logic for updating an account goes here.
+        // This could involve updating a database, a file, etc.
+        // For simplicity, we'll just update the account in the list.
+        for (int i = 0; i < accounts.size(); i++) {
+            Account existingAccount = accounts.get(i);
+            if (existingAccount.getAccountNumber().equals(account.getAccountNumber())) {
+                accounts.set(i, account);
+                saveData(account); // Save the updated account data
+                break;
+            }
+        }
+    }
+
+    public void cancelReservation(Reservation reservation) {
+        // Your logic for cancelling a reservation goes here.
+        // For simplicity, we'll just set the reservation status to CANCELLED.
+        reservation.setStatus(ReservationStatus.CANCELLED);
+//        saveData(reservation.getAccount()); // Save the updated reservation data
+    }
+
+    public void completeReservation(Reservation reservation) {
+        // Your logic for completing a reservation goes here.
+        // For simplicity, we'll just set the reservation status to COMPLETED.
+        reservation.setStatus(ReservationStatus.COMPLETED);
+//        saveData(reservation.getAccount()); // Save the updated reservation data
+    }
+
+    public double calculatePricePerNight(Reservation reservation) {
+        // Your logic for calculating price per night goes here.
+        // For now, we're returning an arbitrary value.
+        return reservation.calculatePricePerNight();
+    }
+
+    public double calculateTotalReservationPrice(Reservation reservation) {
+        // Your logic for calculating total price goes here.
+        // For now, we're returning an arbitrary value.
+        return reservation.calculateTotalReservationPrice();
+    }
+
+    public Account getAccountByNumber(String accountNumber) {
+        for (Account account : accounts) {
+            if (account.getAccountNumber().equals(accountNumber)) {
+                return account;
+            }
+        }
+        return null;
+    }
+
+
+    public void clearAccounts() {
+        this.accounts.clear();
+    }
+}
