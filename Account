@@ -1,0 +1,88 @@
+package com.hotel;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hotel.exception.DuplicateObjectException;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Account {
+    private String accountNumber;
+    private String mailingAddress;
+    private String phoneNumber;
+    private String emailAddress;
+    @JsonIgnore
+    private List<Reservation> reservations;
+
+    public Account() {
+        this.reservations = new ArrayList<>();
+    }
+    public Account(String accountNumber, String mailingAddress, String phoneNumber, String emailAddress) {
+        this.accountNumber = accountNumber;
+        this.mailingAddress = mailingAddress;
+        this.phoneNumber = phoneNumber;
+        this.emailAddress = emailAddress;
+        this.reservations = new ArrayList<>();
+    }
+
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getMailingAddress() {
+        return mailingAddress;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    @JsonIgnore
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setMailingAddress(String mailingAddress) {
+        this.mailingAddress = mailingAddress;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
+    }
+
+    public void addReservation(Reservation reservation) throws DuplicateObjectException {
+        for (Reservation existingReservation : reservations) {
+            if (existingReservation.getReservationNumber().equals(reservation.getReservationNumber())) {
+                throw new DuplicateObjectException("Reservation with number " + reservation.getReservationNumber() + " already exists.");
+            }
+        }
+        reservations.add(reservation);
+    }
+
+    public Reservation getReservationByNumber(String reservationNumber) {
+        for (Reservation reservation : reservations) {
+            if (reservation.getReservationNumber().equals(reservationNumber)) {
+                return reservation;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "Account Number: " + accountNumber
+                + ", Mailing Address: " + mailingAddress
+                + ", Phone Number: " + phoneNumber
+                + ", Email: " + emailAddress
+                + ", Reservations: " + reservations.toString();
+    }
+}
