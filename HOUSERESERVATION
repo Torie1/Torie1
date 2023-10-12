@@ -1,0 +1,43 @@
+package com.hotel;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import java.util.Date;
+
+@JsonTypeName("HouseReservation")
+public class HouseReservation extends Reservation {
+    private int numberOfFloors;
+
+    public HouseReservation() {
+    }
+
+    public HouseReservation(String accountNumber, String reservationNumber, String lodgingPhysicalAddress, String lodgingMailingAddress,
+                            Date startDate, int numberOfNights, int numberOfBeds, int numberOfBedrooms, int numberOfBathrooms,
+                            int lodgingSizeSqFt, int numberOfFloors) {
+        super(accountNumber, reservationNumber, lodgingPhysicalAddress, lodgingMailingAddress, startDate, numberOfNights,
+                numberOfBeds, numberOfBedrooms, numberOfBathrooms, lodgingSizeSqFt);
+        this.numberOfFloors = numberOfFloors;
+    }
+
+    public int getNumberOfFloors() {
+        return numberOfFloors;
+    }
+
+    public void setNumberOfFloors(int numberOfFloors) {
+        this.numberOfFloors = numberOfFloors;
+    }
+
+    @Override
+    public double calculatePricePerNight() {
+        double basicPrice = 120.0;
+        double lodgingSizeFee = getLodgingSizeSqFt() > 900 ? 15.0 : 0.0;
+        return basicPrice + lodgingSizeFee;
+    }
+
+    @Override
+    public double calculateTotalReservationPrice() {
+        double pricePerNight = calculatePricePerNight();
+        return pricePerNight * getNumberOfNights();
+    }
+}
+
