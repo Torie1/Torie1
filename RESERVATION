@@ -1,0 +1,124 @@
+package com.hotel;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.util.Date;
+
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = HotelReservation.class, name = "HotelReservation"),
+        @JsonSubTypes.Type(value = HouseReservation.class, name = "HouseReservation"),
+        @JsonSubTypes.Type(value = CabinReservation.class, name = "CabinReservation")
+})
+public abstract class Reservation {
+    protected String accountNumber;
+    protected String reservationNumber;
+    protected String lodgingPhysicalAddress;
+    protected String lodgingMailingAddress;
+    protected Date startDate;
+    protected int numberOfNights;
+    protected int numberOfBeds;
+    protected int numberOfBedrooms;
+    protected int numberOfBathrooms;
+    protected int lodgingSizeSqFt;
+    protected double price;
+    protected ReservationStatus status;
+
+    public Reservation() {
+    }
+    public Reservation(String accountNumber, String reservationNumber, String lodgingPhysicalAddress, String lodgingMailingAddress,
+                       Date startDate, int numberOfNights, int numberOfBeds, int numberOfBedrooms, int numberOfBathrooms,
+                       int lodgingSizeSqFt) {
+        this.accountNumber = accountNumber;
+        this.reservationNumber = reservationNumber;
+        this.lodgingPhysicalAddress = lodgingPhysicalAddress;
+        this.lodgingMailingAddress = lodgingMailingAddress;
+        this.startDate = startDate;
+        this.numberOfNights = numberOfNights;
+        this.numberOfBeds = numberOfBeds;
+        this.numberOfBedrooms = numberOfBedrooms;
+        this.numberOfBathrooms = numberOfBathrooms;
+        this.lodgingSizeSqFt = lodgingSizeSqFt;
+        this.status = ReservationStatus.DRAFT; // New reservation always starts in draft status
+        this.price = 0; // Price of the reservation is not set until the reservation is completed
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getReservationNumber() {
+        return reservationNumber;
+    }
+
+    public String getLodgingPhysicalAddress() {
+        return lodgingPhysicalAddress;
+    }
+
+    public String getLodgingMailingAddress() {
+        return lodgingMailingAddress;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public int getNumberOfNights() {
+        return numberOfNights;
+    }
+
+    public int getNumberOfBeds() {
+        return numberOfBeds;
+    }
+
+    public int getNumberOfBedrooms() {
+        return numberOfBedrooms;
+    }
+
+    public int getNumberOfBathrooms() {
+        return numberOfBathrooms;
+    }
+
+    public int getLodgingSizeSqFt() {
+        return lodgingSizeSqFt;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public ReservationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ReservationStatus status) {
+        this.status = status;
+    }
+
+    // Abstract method to be implemented by subclasses to calculate price per night
+    public abstract double calculatePricePerNight();
+
+    // Abstract method to be implemented by subclasses to calculate total reservation price
+    public abstract double calculateTotalReservationPrice();
+
+    @Override
+    public String toString() {
+        // You can modify the format as per your requirements
+        return "Reservation Number: " + reservationNumber
+                + ", Account Number: " + accountNumber
+                + ", Physical Address: " + lodgingPhysicalAddress
+                + ", Mailing Address: " + lodgingMailingAddress
+                + ", Start Date: " + startDate
+                + ", Nights: " + numberOfNights
+                + ", Beds: " + numberOfBeds
+                + ", Bedrooms: " + numberOfBedrooms
+                + ", Bathrooms: " + numberOfBathrooms
+                + ", Lodging Size (sq ft): " + lodgingSizeSqFt
+                + ", Price: " + price
+                + ", Status: " + status;
+    }
+}
